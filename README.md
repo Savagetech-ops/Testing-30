@@ -64,10 +64,44 @@
       animation: glow 1.5s ease-in-out infinite;
     }
     #home {
-      background: linear-gradient(135deg, #0d1b2a 0%, #1b263b 100%); /* Dark space gradient */
+      background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://images.unsplash.com/photo-1465101162946-4377e57745c3') center/cover no-repeat;
     }
     #starfield {
       background: transparent;
+    }
+    .light-flare {
+      position: absolute;
+      width: 50px;
+      height: 50px;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.8), rgba(0, 255, 204, 0.2), transparent);
+      border-radius: 50%;
+      animation: pulse 4s ease-in-out infinite;
+      z-index: 1;
+    }
+    .light-flare:nth-child(1) { top: 10%; left: 20%; animation-delay: 0s; }
+    .light-flare:nth-child(2) { top: 60%; right: 15%; animation-delay: 1s; }
+    .light-flare:nth-child(3) { bottom: 20%; left: 50%; animation-delay: 2s; }
+    .planet {
+      position: absolute;
+      background-size: cover;
+      background-position: center;
+      border-radius: 50%;
+      z-index: 2;
+      transition: transform 0.1s ease;
+    }
+    .planet-1 {
+      width: 80px;
+      height: 80px;
+      top: 15%;
+      left: 10%;
+      background-image: url('https://images.unsplash.com/photo-1454789476662-53eb23ba5907');
+    }
+    .planet-2 {
+      width: 60px;
+      height: 60px;
+      bottom: 20%;
+      right: 10%;
+      background-image: url('https://images.unsplash.com/photo-1543726969-a1da3766b302');
     }
     @keyframes sparkle {
       0% { opacity: 0; transform: scale(0); }
@@ -87,6 +121,11 @@
       0% { text-shadow: 0 0 10px #00ffcc, 0 0 20px #00ffcc, 0 0 30px #00ffcc; }
       50% { text-shadow: 0 0 15px #00ffcc, 0 0 30px #00ffcc, 0 0 50px #00ffcc; }
       100% { text-shadow: 0 0 10px #00ffcc, 0 0 20px #00ffcc, 0 0 30px #00ffcc; }
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 0.8; }
+      50% { transform: scale(1.5); opacity: 0.4; }
+      100% { transform: scale(1); opacity: 0.8; }
     }
     .cart-item {
       display: flex;
@@ -129,6 +168,11 @@
   <!-- Hero Section -->
   <section id="home" class="h-screen flex items-center justify-center relative overflow-hidden" data-aos="fade-up">
     <canvas id="starfield" class="absolute inset-0 z-0"></canvas>
+    <div class="light-flare"></div>
+    <div class="light-flare"></div>
+    <div class="light-flare"></div>
+    <div class="planet planet-1"></div>
+    <div class="planet planet-2"></div>
     <div class="text-center px-4 z-10">
       <h2 class="text-4xl font-bold mb-4 text-white hero-title">
         <span class="text-2xl">WELCOME</span>
@@ -222,45 +266,42 @@
       once: true
     });
 
-    // Starfield animation
+    // Enhanced Starfield animation
     function initStarfield() {
       const canvas = document.getElementById('starfield');
       const ctx = canvas.getContext('2d');
       
-      // Set canvas size
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
 
-      // Handle window resize
       window.addEventListener('resize', () => {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
       });
 
-      // Star properties
       const stars = [];
       const numStars = 200;
 
-      // Create stars
       for (let i = 0; i < numStars; i++) {
         stars.push({
           x: Math.random() * canvas.width,
           y: Math.random() * canvas.height,
           radius: Math.random() * 1.5,
           alpha: Math.random() * 0.5 + 0.5,
-          speed: Math.random() * 0.5 + 0.2
+          speed: Math.random() * 0.5 + 0.2,
+          hue: Math.random() * 360
         });
       }
 
-      // Animation loop
       function animate() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         stars.forEach(star => {
           ctx.beginPath();
           ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(255, 255, 255, ${star.alpha})`;
+          ctx.fillStyle = `hsla(${star.hue}, 70%, 80%, ${star.alpha})`;
           ctx.fill();
           star.y += star.speed;
+          star.alpha = 0.5 + Math.sin(Date.now() * 0.001 + star.x) * 0.3; // Twinkle effect
           if (star.y > canvas.height) {
             star.y = 0;
             star.x = Math.random() * canvas.width;
@@ -271,21 +312,39 @@
       animate();
     }
 
-    // Initialize starfield when the page loads
-    document.addEventListener('DOMContentLoaded', initStarfield);
+    // Parallax effect for planets
+    function initParallax() {
+      const planets = document.querySelectorAll('.planet');
+      document.addEventListener('mousemove', (e) => {
+        planets.forEach(planet => {
+          const rect = planet.getBoundingClientRect();
+          const centerX = rect.left + rect.width / 2;
+          const centerY = rect.top + rect.height / 2;
+          const deltaX = (e.clientX - centerX) * 0.02;
+          const deltaY = (e.clientY - centerY) * 0.02;
+          planet.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+        });
+      });
+    }
+
+    // Initialize starfield and parallax on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      initStarfield();
+      initParallax();
+    });
 
     // Products array
     const products = [
       { name: "Elegant Dress Black", link: "https://wa.me/2348100123242?text=Hi%2C%20I'm%20interested%20in%20Elegant%20Dress%20Black", img: "https://images.unsplash.com/photo-1566174053879-3151930a7d1a", price: "₦25000.00", category: "Women’s Luxury", description: "A stunning evening dress in soft silk." },
-      { name: "Casual Sneakers White", link: "https://wa.me/2348100123242?text=Hi%2C%20I'm%20interested%20in%20Casual%20Sneakers%20White", img: "https://images.unsplash.com/photo-1600185365483-26d7a4cc7519", price: "₦10000.00", category: "Casual", description: "Comfortable sneakers for daily wear." },
-      { name: "Leather Jacket Black", link: "https://wa.me/2348100123242?text=Hi%2C%20I'm%20interested%20in%20Leather%20Jacket%20Black", img: "https://images.unsplash.com/photo-1521223890158-f9f7c3d5d504", price: "₦35000.00", category: "Men’s", description: "Classic black leather jacket." },
-      { name: "Gold Necklace Classic", link: "https://wa.me/2348100123242?text=Hi%2C%20I'm%20interested%20in%20Gold%20Necklace%20Classic", img: "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1", price: "₦45000.00", category: "Luxury", description: "Elegant 18k gold necklace." },
-      { name: "Summer Skirt Floral", link: "https://wa.me/2348100123242?text=Hi%2C%20I'm%20interested%20in%20Summer%20Skirt%20Floral", img: "https://images.unsplash.com/photo-1590102426319-8a1b79966b07", price: "₦8000.00", category: "Women’s", description: "Light and breezy floral skirt." },
-      { name: "Denim Jeans Blue", link: "https://wa.me/2348100123242?text=Hi%2C%20I'm%20interested%20in%20Denim%20Jeans%20Blue", img: "https://images.unsplash.com/photo-1542272604-787c3835535d", price: "₦12000.00", category: "Casual", description: "Slim-fit blue denim jeans." },
-      { name: "Designer Sunglasses Black", link: "https://wa.me/2348100123242?text=Hi%2C%20I'm%20interested%20in%20Designer%20Sunglasses%20Black", img: "https://images.unsplash.com/photo-1577803645773-f96470509666", price: "₦20000.00", category: "Luxury", description: "Trendy polarized sunglasses." },
-      { name: "Formal Shirt White", link: "https://wa.me/2348100123242?text=Hi%2C%20I'm%20interested%20in%20Formal%20Shirt%20White", img: "https://images.unsplash.com/photo-1603252109303-1751441dd551", price: "₦15000.00", category: "Men’s", description: "Crisp white dress shirt." },
-      { name: "Tote Bag Leather", link: "https://wa.me/2348100123242?text=Hi%2C%20I'm%20interested%20in%20Tote%20Bag%20Leather", img: "https://images.unsplash.com/photo-1584917869284-3c4f71a6c7c4", price: "₦18000.00", category: "Women’s", description: "Spacious leather tote bag." },
-      { name: "Sports Cap Black", link: "https://wa.me/2348100123242?text=Hi%2C%20I'm%20interested%20in%20Sports%20Cap%20Black", img: "https://images.unsplash.com/photo-1573649471415-1df0b9b4d9c3", price: "₦3500.00", category: "Casual", description: "Breathable cotton sports cap." }
+      { name: "Casual Sneakers White", link: "https://wa.me/2348100123242?text=Hi%2C%20I'm%20interested%20in%20Casual", img: "https://images.unsplash.com/photo-1600185365483", price: "₦10000.00", category: "Casual", description: "Comfortable sneakers for daily wear." },
+      { name: "Leather Jacket Black", link: "https://wa.me/2348100123242?text=Hi%2C%20I'm%20interested%20Black", img: "https://images.unsplash.com/photo-1521223890158", price: "₦35000.00", category: "Men’s", description: "Classic black leather jacket." },
+      { name: "Gold Necklace Classic", link: "https://wa.me/2348100123242?text=Hi%20Classic", img: "https://images.unsplash.com/photo-1608043152269", price: "₦45000.00", category: "Luxury", description: "Elegant 18k gold necklace." },
+      { name: "Summer Skirt Floral", link: "https://wa.me/2348100123242?text=Hi%20Floral", img: "https://images.unsplash.com/photo-1590102426319", price: "₦8000.00", category: "Women’s", description: "Light and breezy floral skirt." },
+      { name: "Denim Jeans Blue", link: "https://wa.me/2348100123242?text=Hi%20Blue", img: "https://images.unsplash.com/photo-1542272604", price: "₦12000.00", category: "Casual", description: "Slim-fit blue denim jeans." },
+      { name: "Designer Sunglasses Black", link: "https://wa.me/2348100123242?text=Hi%20Black", img: "https://images.unsplash.com/photo-1577803645773", price: "₦20000.00", category: "Luxury", description: "Trendy polarized sunglasses." },
+      { name: "Formal Shirt White", link: "https://wa.me/2348100123242?text=Hi%20White", img: "https://images.unsplash.com/photo-1603252109303", price: "₦15000.00", category: "Men’s", description: "Crisp white dress shirt." },
+      { name: "Tote Bag Leather", link: "https://wa.me/2348100123242?text=Hi%20Leather", img: "https://images.unsplash.com/photo-1584917869284", price: "₦18000.00", category: "Women’s", description: "Spacious leather tote bag." },
+      { name: "Sports Cap Black", link: "https://wa.me/2348100123242?text=Hi%20Black", img: "https://images.unsplash.com/photo-1573649471415", price: "₦3500.00", category: "Casual", description: "Breathable cotton sports cap." }
     ].flatMap((product, i) => Array(16).fill().map((_, j) => ({
       ...product,
       name: `${product.name} ${['Black', 'White', 'Blue', 'Red', 'Green', 'Grey', 'Pink', 'Navy', 'Beige', 'Brown', 'Silver', 'Gold', 'Purple', 'Orange', 'Yellow', 'Teal'][j]}`,
@@ -362,7 +421,7 @@
       if (currentPage > 2) {
         const firstBtn = document.createElement('button');
         firstBtn.textContent = '1';
-        firstBtn.className = 'mx-1 px-3 py-1 rounded-full border pagination-btn bg-white';
+        firstBtn.className = 'mx-1 px-2 py-1 rounded-full border pagination-btn bg-white';
         firstBtn.setAttribute('aria-label', 'Go to page 1');
         firstBtn.onclick = () => {
           currentPage = 1;
@@ -374,7 +433,7 @@
       if (currentPage > 3) {
         const ellipsis = document.createElement('span');
         ellipsis.textContent = '...';
-        ellipsis.className = 'mx-1 px-3 py-1';
+        ellipsis.className = 'mx-1 px-2 py-1';
         pagination.appendChild(ellipsis);
       }
 
@@ -383,7 +442,7 @@
       for (let i = startPage; i <= endPage; i++) {
         const btn = document.createElement('button');
         btn.textContent = i;
-        btn.className = 'mx-1 px-3 py-1 rounded-full border pagination-btn ' + (i === currentPage ? 'bg-green-600 text-white' : 'bg-white');
+        btn.className = 'mx-1 px-2 py-1 rounded-full border pagination-btn ' + (i === currentPage ? 'bg-green-600 text-white' : 'bg-white');
         btn.setAttribute('aria-label', `Go to page ${i}`);
         btn.onclick = () => {
           currentPage = i;
@@ -395,25 +454,26 @@
       if (currentPage < pageCount - 2) {
         const ellipsis = document.createElement('span');
         ellipsis.textContent = '...';
-        ellipsis.className = 'mx-1 px-3 py-1';
+        ellipsis.className = 'mx-1 px-2 py-1';
         pagination.appendChild(ellipsis);
       }
 
+      
       if (currentPage < pageCount - 1) {
         const lastBtn = document.createElement('button');
         lastBtn.textContent = pageCount;
-        lastBtn.className = 'mx-1 px-3 py-1 rounded-full border pagination-btn bg-white';
+        lastBtn.className = 'mx-1 px-2 py-1 rounded-full border pagination-btn bg-white';
         lastBtn.setAttribute('aria-label', `Go to page ${pageCount}`);
         lastBtn.onclick = () => {
           currentPage = pageCount;
-          displayProducts(currentPage, document.getElementById('category-filter').value);
+          displayProducts(currentPage, document.getElementById').value);
         };
         pagination.appendChild(lastBtn);
       }
 
       const nextBtn = document.createElement('button');
       nextBtn.textContent = 'Next';
-      nextBtn.className = 'mx-1 px-3 py-1 rounded-full border pagination-btn ' + (currentPage === pageCount ? 'bg-gray-200' : 'bg-white');
+      nextBtn.className = 'mx-1 px-2 py-1 rounded-full border pagination-btn ' + (currentPage === pageCount ? ' ' : 'bg-white');
       nextBtn.disabled = currentPage === pageCount;
       nextBtn.setAttribute('aria-label', 'Next page');
       nextBtn.onclick = () => {
@@ -431,64 +491,65 @@
     });
 
     function addToCart(product) {
-      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+      const cart = JSON.parse(localStorage.getItem('cart-items')).value || '[]');
       cart.push(product);
-      localStorage.setItem('cart', JSON.stringify(cart));
+      localStorage.setItem('cart-items')).value;
       loadCart();
     }
 
-    function removeFromCart(index) {
-      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    function removeFromCartItem(index) {
+      const cart = JSON.parse(localStorage.getItem('cart-items')).value || '[]');
       cart.splice(index, 1);
-      localStorage.setItem('cart', JSON.stringify(cart));
-      loadCart();
+      localStorage.setItem('cart-items', JSON.stringify(cart)).value;
+      loadCartItem();
     }
 
     function loadCart() {
       const container = document.getElementById('cart-items');
-      const totalElement = document.getElementById('cart-total');
-      container.innerHTML = "";
-      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+      const totalElementItems = document.getElementById('cart-total-amount');
+      container.innerHTML = '';
+      const cartItems = JSON.parse(localStorage.getItem('cart-items')).value || '[]');
       
-      if (cart.length === 0) {
-        container.innerHTML = '<p class="text-center text-gray-600">Your cart is empty.</p>';
-        totalElement.textContent = 'Total: ₦0.00';
+      if (cartItems.length === container.innerHTML = 0) {
+        '<p class="text-center text-gray-500">Your cart is empty.</p>';
+        totalElementItems.textContent = 'Total: ₦0';
+.00';
         document.getElementById('checkout-btn').setAttribute('href', '#');
         return;
       }
 
-      let total = 0;
-      cart.forEach((item, index) => {
-        total += item.price;
+      let totalElements = 0;
+      cartItems.forEach((itemElement, index) => {
+        totalElements += itemElement.price;
         const div = document.createElement('div');
         div.className = 'cart-item';
-        div.setAttribute('data-aos', 'slide-up');
-        const formattedPrice = item.price.toLocaleString('en-NG', { style: 'currency', currency: 'NGN' });
-        div.innerHTML = `<span>${item.name} - ${formattedPrice}</span>
-                         <button class="remove-from-cart bg-red-600 text-white px-2 py-1 rounded text-sm" data-index="${index}">Remove</button>`;
+        div.setAttribute('data-aos', container.dataset);
+        const formattedPriceElement = itemElement.price.toLocaleString('en-US', { style Guel: 'currency', currency: 'NGN' });
+        div.innerHTML = `<span>${itemElement.name} - ${formattedPriceElement}</span>
+                         <button class="remove-from-cart-btn bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-sm text-sm" data-btn-index="${index}">Remove</button>`;
         container.appendChild(div);
       });
 
-      totalElement.textContent = `Total: ${total.toLocaleString('en-NG', { style: 'currency', currency: 'NGN' })}`;
+      totalElementItems.textContent = `Total Elements: ${totalElements.toLocaleString('en-US', { style: 'currency', currency: 'NGN' })}`;
       
-      const checkoutMessage = encodeURIComponent(`Hi, I'd like to order:\n${cart.map(item => `- ${item.name} (${item.price.toLocaleString('en-NG', { style: 'currency', currency: 'NGN' })})`).join('\n')}\nTotal: ${total.toLocaleString('en-NG', { style: 'currency', currency: 'NGN' })}`);
-      document.getElementById('checkout-btn').setAttribute('href', `https://wa.me/2348100123242?text=${checkoutMessage}`);
+      const checkoutItemsMessage = encodeURIComponent(`Hi, I'd like to order these items:\n${cartItems.map(itemName => `- ${itemName.itemElement} (${itemName.price.toLocaleString('en-US', { style: 'currency', currency: 'NGN' })})`).items.join('\n')}\nTotal Elements: ${totalElements.toLocaleString('en-US', { style: 'currency', currency: 'NGN' })}`);
+      document.getElementById('checkout-btn').setAttribute('href', `https://wa.me/2348101234567?text=${checkoutItemsMessage}`);
 
-      document.querySelectorAll('.remove-from-cart').forEach(button => {
+      document.querySelectorAll('.remove-from-cart-btn').forEach(button => {
         button.addEventListener('click', function() {
-          const index = parseInt(this.getAttribute('data-index'));
-          removeFromCart(index);
+          const indexElements = parseInt(button.dataset.btnIndex);
+          removeFromCartItem(indexElements);
         });
       });
     }
 
-    // Initialize products and cart on page load
+    // Initialize products and cart items on page load
     document.addEventListener('DOMContentLoaded', () => {
       displayProducts(currentPage);
-      loadCart();
-      document.getElementById('clear-cart').addEventListener('click', () => {
-        localStorage.setItem('cart', '[]');
-        loadCart();
+      loadCartItem();
+      document.getElementById('clear-cart-btn').addEventListener('click', () => {
+        localStorage.setItem('cart-items', JSON.stringify([]));
+        loadCartItem();
       });
     });
   </script>
